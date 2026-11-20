@@ -8,7 +8,7 @@ import 'package:chatterbox/providers/selected_user_provider.dart';
 import 'package:chatterbox/repository/auth_repository.dart';
 import 'package:chatterbox/repository/socket_repository.dart';
 import 'package:chatterbox/services/chat_services.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fluttertoast/fluttertoast.dart';

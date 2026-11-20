@@ -2,7 +2,7 @@ import 'package:chatterbox/colors.dart';
 import 'package:chatterbox/preferences/theme_preference.dart';
 import 'package:chatterbox/repository/auth_repository.dart';
 import 'package:chatterbox/themes/light_theme.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class MyDrawer extends ConsumerWidget {

@@ -1,7 +1,7 @@
 import 'package:chatterbox/views/chat_screen.dart';
 import 'package:chatterbox/views/home_screen.dart';
 import 'package:chatterbox/views/login_screen.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:routemaster/routemaster.dart';
 
 final loggedOutRoute = RouteMap(

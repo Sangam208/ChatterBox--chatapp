@@ -6,7 +6,7 @@ import 'package:chatterbox/components/widgets/my_drawer.dart';
 import 'package:chatterbox/components/widgets/my_search_anchor.dart';
 import 'package:chatterbox/models/error_model.dart';
 import 'package:chatterbox/repository/auth_repository.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {

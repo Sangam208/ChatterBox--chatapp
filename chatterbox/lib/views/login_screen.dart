@@ -1,6 +1,6 @@
 import 'package:chatterbox/colors.dart';
 import 'package:chatterbox/repository/auth_repository.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lottie/lottie.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -16,7 +16,9 @@ class LoginScreen extends ConsumerWidget {
         errorModel.error != null ? errorModel.error! : 'Logged in';
     if (errorModel.data != null) {
       ref.read(userProvider.notifier).update((state) => errorModel.data);
-      Routemaster.of(context).replace('/');
+      if (context.mounted) {
+        Routemaster.of(context).replace('/');
+      }
       Fluttertoast.showToast(
         msg: toastmsg,
         gravity: ToastGravity.BOTTOM,

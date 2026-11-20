@@ -1,5 +1,5 @@
 import 'package:chatterbox/repository/auth_repository.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
 
 class SocketClient {

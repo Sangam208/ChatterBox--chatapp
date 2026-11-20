@@ -4,7 +4,7 @@ import 'package:chatterbox/preferences/theme_preference.dart';
 import 'package:chatterbox/repository/auth_repository.dart';
 import 'package:chatterbox/router.dart';
 import 'package:chatterbox/themes/light_theme.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:routemaster/routemaster.dart';
@@ -50,11 +50,7 @@ class _AuthGateState extends ConsumerState<AuthGate> {
       );
     }
     return MaterialApp.router(
-      localizationsDelegates: const [
-        GlobalMaterialLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-      ],
+      localizationsDelegates: const [GlobalWidgetsLocalizations.delegate],
       title: 'ChatterBox',
       debugShowCheckedModeBanner: false,
       routerDelegate: RoutemasterDelegate(

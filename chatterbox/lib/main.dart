@@ -1,6 +1,6 @@
 import 'package:chatterbox/auth/auth_gate.dart';
 import 'package:chatterbox/preferences/theme_preference.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

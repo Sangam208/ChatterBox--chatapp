@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:chatterbox/models/error_model.dart';
 import 'package:chatterbox/models/user_model.dart';
 import 'package:chatterbox/repository/local_storage_repository.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';

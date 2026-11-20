@@ -2,7 +2,7 @@ import 'package:chatterbox/models/error_model.dart';
 import 'package:chatterbox/models/user_model.dart';
 import 'package:chatterbox/providers/selected_user_provider.dart';
 import 'package:chatterbox/repository/auth_repository.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:routemaster/routemaster.dart';
 
