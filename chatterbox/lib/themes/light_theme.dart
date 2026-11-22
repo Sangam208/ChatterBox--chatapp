@@ -1,32 +1,35 @@
-import 'package:chatterbox/colors.dart';
 import 'package:material_ui/material_ui.dart';
 
 ThemeData lightMode = ThemeData(
+  useMaterial3: true,
   colorScheme: ColorScheme.light(
-    surface: Colors.grey.shade300,
-    primary: Colors.grey.shade500,
-    secondary: Colors.grey.shade200,
-    tertiary: Colors.grey.shade400,
-    inversePrimary: Colors.grey.shade900,
+    surface: const Color(0xFFF8F9FC),
+    primary: const Color(0xFF49658F),
+    secondary: const Color(0xFF66758B),
+    tertiary: const Color(0xFFE9EEF6),
+    inversePrimary: const Color(0xFF314B70),
   ),
   appBarTheme: AppBarTheme(
     centerTitle: false,
-    backgroundColor: kTransparentColor,
-    elevation: 6.0,
+    backgroundColor: const Color(0xFFF8F9FC),
+    foregroundColor: const Color(0xFF20242B),
+    elevation: 0,
   ),
 );
 
 ThemeData darkMode = ThemeData(
+  useMaterial3: true,
   colorScheme: ColorScheme.dark(
-    surface: Colors.grey.shade900,
-    primary: Colors.grey.shade600,
-    secondary: Colors.grey.shade700,
-    tertiary: Colors.grey.shade800,
-    inversePrimary: Colors.grey.shade300,
+    surface: const Color(0xFF11151B),
+    primary: const Color(0xFFB3C9EC),
+    secondary: const Color(0xFFC0C8D5),
+    tertiary: const Color(0xFF252C36),
+    inversePrimary: const Color(0xFFD6E3FA),
   ),
   appBarTheme: AppBarTheme(
     centerTitle: false,
-    backgroundColor: kTransparentColor,
-    elevation: 6.0,
+    backgroundColor: const Color(0xFF11151B),
+    foregroundColor: const Color(0xFFE6EAF0),
+    elevation: 0,
   ),
 );

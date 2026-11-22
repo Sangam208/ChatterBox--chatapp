@@ -1,6 +1,4 @@
 import 'package:chatterbox/colors.dart';
-import 'package:chatterbox/components/my_toast.dart';
-import 'package:chatterbox/models/error_model.dart';
 import 'package:chatterbox/models/message_model.dart';
 import 'package:chatterbox/models/user_model.dart';
 import 'package:chatterbox/preferences/theme_preference.dart';
@@ -12,7 +10,6 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
   final String senderID;
@@ -29,8 +26,6 @@ class ChatScreen extends ConsumerStatefulWidget {
 
 class _ChatScreenState extends ConsumerState<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
-  String message = '';
-  ErrorModel? errorModel;
   bool _isButtonEnabled = false;
   late final UserModel? receiver;
   Future<void>? _future;
@@ -40,24 +35,24 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   @override
   void initState() {
     super.initState();
-    _socketRepository = SocketRepository();
+    _socketRepository = SocketRepository(token: ref.read(userProvider)!.token);
     _messageController.addListener(_updateButtonState);
     receiver = ref.read(selectedUserProvider);
-    _future = getMessages();
-
-    // join room
-    _socketRepository.joinRoom(ref.read(userProvider)!.uid, receiver!.uid);
-
-    _socketRepository.userJoinedListener((message) {
-      debugPrint(message['message']);
-    });
 
     // listen for new messages from the socket
     _socketRepository.messageListener((message) {
+      if (message['senderId'] == ref.read(userProvider)?.uid) return;
       final newMessage = MessageModel.fromMap(message);
       ref
           .read(messagesListProvider.notifier)
           .update((state) => [newMessage, ...state]);
+    });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref.read(messagesListProvider.notifier).state = [];
+      setState(() => _future = getMessages());
+      _socketRepository.joinRoom(ref.read(userProvider)!.uid, receiver!.uid);
     });
   }
 
@@ -82,8 +77,25 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
             CircleAvatar(
-              radius: 20.0,
-              backgroundImage: AssetImage('assets/images/default_avatar.png'),
+              radius: 20,
+              backgroundColor: Theme.of(context).colorScheme.tertiary,
+              child: ClipOval(
+                child: receiver!.profilePic.isNotEmpty
+                    ? Image.network(
+                        receiver!.profilePic,
+                        width: 40,
+                        height: 40,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) => Icon(
+                          Icons.person,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      )
+                    : Icon(
+                        Icons.person,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+              ),
             ),
             Expanded(
               child: Text(
@@ -97,15 +109,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             ),
           ],
         ),
-        actions: [
-          IconButton(onPressed: () => myToast(), icon: const Icon(Icons.call)),
-          IconButton(
-            onPressed: () => myToast(),
-            icon: const Icon(FontAwesomeIcons.video),
-          ),
-          IconButton(onPressed: () => myToast(), icon: const Icon(Icons.info)),
-        ],
-        actionsPadding: const EdgeInsets.only(right: 15),
       ),
       body: SafeArea(
         child: Column(
@@ -128,40 +131,45 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
-  void saveMessage(String message) async {
-    final senderId = ref.read(userProvider)!.uid;
+  Future<void> saveMessage(String text) async {
+    final currentUser = ref.read(userProvider);
+    final currentReceiver = receiver;
+    if (currentUser == null || currentReceiver == null) return;
 
-    // Save message to DB
-    errorModel = await ref
+    final result = await ref
         .read(chatServicesProvider)
         .saveMessage(
-          token: ref.read(userProvider)!.token,
-          ref: ref,
-          senderId: senderId,
-          receiverId: receiver!.uid,
-          message: message,
+          token: currentUser.token,
+          senderId: currentUser.uid,
+          receiverId: currentReceiver.uid,
+          message: text,
         );
 
-    if (errorModel == null || errorModel!.data == null) {
-      Fluttertoast.showToast(msg: '${errorModel!.error}');
+    if (!mounted) return;
+    if (result.data == null) {
+      Fluttertoast.showToast(msg: result.error ?? 'Unable to send message');
+      return;
     }
 
-    // Send message via Socket
-    _socketRepository.sendMessage(message, senderId, receiver!.uid);
+    final savedMessage = result.data;
+    if (savedMessage is MessageModel) {
+      ref
+          .read(messagesListProvider.notifier)
+          .update((messages) => [savedMessage, ...messages]);
+    }
+    _socketRepository.sendMessage(text, currentUser.uid, currentReceiver.uid);
   }
 
   Future<void> getMessages() async {
-    errorModel = await ref
+    final result = await ref
         .read(chatServicesProvider)
         .getMessages(
           ref.read(userProvider)!.token,
           ref.read(userProvider)!.uid,
           receiver!.uid,
         );
-    if (errorModel != null && errorModel!.data != null) {
-      ref
-          .read(messagesListProvider.notifier)
-          .update((state) => errorModel!.data);
+    if (mounted && result.data != null) {
+      ref.read(messagesListProvider.notifier).update((_) => result.data);
     }
   }
 
@@ -170,13 +178,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     return messages.isEmpty
         ? const Center(child: Text("No messages yet"))
         : ListView.builder(
-          padding: EdgeInsets.only(bottom: 8.0),
-          reverse: true,
-          itemCount: messages.length,
-          itemBuilder: (context, index) {
-            return _buildMessageItem(messages, index);
-          },
-        );
+            padding: EdgeInsets.only(bottom: 8.0),
+            reverse: true,
+            itemCount: messages.length,
+            itemBuilder: (context, index) {
+              return _buildMessageItem(messages, index);
+            },
+          );
   }
 
   Widget _buildMessageItem(List<MessageModel> messages, int index) {
@@ -187,66 +195,49 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 5.0),
         child: GestureDetector(
-          onLongPress:
-              () => showModalBottomSheet(
-                constraints: BoxConstraints(
-                  maxWidth: double.infinity,
-                  maxHeight: 70,
-                ),
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                shape: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10.0),
-                ),
-                context: context,
-                builder:
-                    (context) => Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                      child: Row(
-                        children: [
-                          IconButton(
-                            onPressed: () {
-                              Clipboard.setData(
-                                ClipboardData(text: message.message),
-                              );
-                              Navigator.pop(context);
-                              Fluttertoast.showToast(
-                                msg: 'Copied To Clipboard',
-                                toastLength: Toast.LENGTH_SHORT,
-                                gravity: ToastGravity.BOTTOM,
-                              );
-                            },
-                            icon: Icon(Icons.copy, size: 32),
-                          ),
-                          Expanded(
-                            child: Align(
-                              alignment: Alignment.center,
-                              child: Visibility(
-                                visible: isSender,
-                                child: IconButton(
-                                  onPressed: () {
-                                    Navigator.pop(context);
-                                  },
-                                  icon: Icon(Icons.delete, size: 32),
-                                ),
-                              ),
-                            ),
-                          ),
-                          IconButton(
-                            onPressed: () => Navigator.pop(context),
-                            icon: Icon(Icons.cancel, size: 32),
-                          ),
-                        ],
-                      ),
-                    ),
+          onLongPress: () => showModalBottomSheet(
+            constraints: BoxConstraints(
+              maxWidth: double.infinity,
+              maxHeight: 70,
+            ),
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            shape: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10.0),
+            ),
+            context: context,
+            builder: (context) => Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10.0),
+              child: Row(
+                children: [
+                  IconButton(
+                    onPressed: () {
+                      Clipboard.setData(ClipboardData(text: message.message));
+                      Navigator.pop(context);
+                      Fluttertoast.showToast(
+                        msg: 'Copied To Clipboard',
+                        toastLength: Toast.LENGTH_SHORT,
+                        gravity: ToastGravity.BOTTOM,
+                      );
+                    },
+                    icon: Icon(Icons.copy, size: 32),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: Icon(Icons.cancel, size: 32),
+                  ),
+                ],
               ),
+            ),
+          ),
           child: Container(
             padding: EdgeInsets.all(10),
             constraints: BoxConstraints(
               maxWidth: MediaQuery.of(context).size.width * 0.7,
             ),
             decoration: BoxDecoration(
-              color:
-                  isSender ? kSenderChatBubbleColor : kReceiverChatBubbleColor,
+              color: isSender
+                  ? kSenderChatBubbleColor
+                  : kReceiverChatBubbleColor,
               borderRadius: BorderRadius.all(Radius.circular(20)),
             ),
             child: Text(
@@ -260,6 +251,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   void _updateButtonState() {
+    if (!mounted) return;
     setState(() {
       _isButtonEnabled = _messageController.text.trim().isNotEmpty;
     });
@@ -271,21 +263,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 10.0),
       child: Row(
         children: [
-          IconButton(
-            onPressed: () => myToast(),
-            icon: Icon(FontAwesomeIcons.camera),
-          ),
-          IconButton(onPressed: () => myToast(), icon: Icon(Icons.upload_file)),
-          IconButton(
-            onPressed: () => myToast(),
-            icon: Icon(FontAwesomeIcons.microphone),
-          ),
           Expanded(
             child: TextField(
               cursorColor: theme ? kWhiteColor : null,
               onSubmitted: (value) {
                 if (_isButtonEnabled) {
-                  saveMessage(value);
+                  saveMessage(value.trim());
                   _messageController.clear();
                 }
               },
@@ -315,13 +298,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             ),
           ),
           IconButton(
-            onPressed:
-                _isButtonEnabled
-                    ? () {
-                      saveMessage(_messageController.text.trim());
-                      _messageController.clear();
-                    }
-                    : null,
+            onPressed: _isButtonEnabled
+                ? () {
+                    saveMessage(_messageController.text.trim());
+                    _messageController.clear();
+                  }
+                : null,
             icon: Icon(Icons.send),
           ),
         ],

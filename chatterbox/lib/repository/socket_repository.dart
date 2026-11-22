@@ -1,48 +1,37 @@
 import 'package:chatterbox/clients/socket_client.dart';
-import 'package:socket_io_client/socket_io_client.dart';
 
 class SocketRepository {
-  final _socketClient = SocketClient.instance.socket!;
+  SocketRepository({required String token})
+    : _client = SocketClient(token: token);
 
-  Socket get socketClient => _socketClient;
-
-  void connect() {
-    if (!_socketClient.connected) {
-      _socketClient.connect();
-    }
-  }
+  final SocketClient _client;
 
   void disconnect() {
-    _socketClient.disconnect();
+    _client.dispose();
   }
 
   void joinRoom(String senderId, String receiverId) {
-    connect(); // Ensure connection before joining
-    _socketClient.emit('join', {
+    _client.socket.emit('join', {
       "senderId": senderId.toString(),
       "receiverId": receiverId.toString(),
     });
   }
 
   void sendMessage(String text, String senderId, String receiverId) {
-    connect(); // Ensure connection before sending message
-    _socketClient.emit('message', {
+    _client.socket.emit('message', {
       "senderId": senderId,
       "receiverId": receiverId,
       "message": text,
     });
   }
 
-  void userJoinedListener(Function(Map<String, dynamic>) func) {
-    _socketClient.on('user_joined', (message) => func(message));
-  }
-
   void messageListener(Function(Map<String, dynamic>) func) {
-    _socketClient.on('changes', (message) => func(message));
+    _client.socket.on('changes', (message) {
+      if (message is Map) func(Map<String, dynamic>.from(message));
+    });
   }
 
   void removeListener() {
-    _socketClient.off('changes');
-    _socketClient.off('user_joined');
+    _client.socket.off('changes');
   }
 }

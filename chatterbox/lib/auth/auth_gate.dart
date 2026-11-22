@@ -1,13 +1,11 @@
 import 'package:chatterbox/colors.dart';
-import 'package:chatterbox/models/error_model.dart';
 import 'package:chatterbox/preferences/theme_preference.dart';
 import 'package:chatterbox/repository/auth_repository.dart';
-import 'package:chatterbox/router.dart';
+import 'package:chatterbox/views/home_screen.dart';
+import 'package:chatterbox/views/login_screen.dart';
 import 'package:chatterbox/themes/light_theme.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:routemaster/routemaster.dart';
 
 class AuthGate extends ConsumerStatefulWidget {
   const AuthGate({super.key});
@@ -17,7 +15,6 @@ class AuthGate extends ConsumerStatefulWidget {
 }
 
 class _AuthGateState extends ConsumerState<AuthGate> {
-  ErrorModel? errorModel;
   bool isLoading = true;
 
   @override
@@ -27,44 +24,36 @@ class _AuthGateState extends ConsumerState<AuthGate> {
   }
 
   Future<void> getUserData() async {
-    errorModel = await ref.read(authRepositoryProvider).getUserData();
-    if (errorModel != null && errorModel!.data != null) {
-      ref.read(userProvider.notifier).update((state) => errorModel!.data);
+    try {
+      final result = await ref.read(authRepositoryProvider).getUserData();
+      if (!mounted) return;
+      if (result.data != null) {
+        ref.read(userProvider.notifier).state = result.data;
+      }
+    } catch (error) {
+      debugPrint('Unable to restore session: $error');
+    } finally {
+      if (mounted) setState(() => isLoading = false);
     }
-    setState(() {
-      isLoading = false;
-    });
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = ref.watch(themeProvider) ? darkMode : lightMode;
-    if (isLoading) {
-      return MaterialApp(
-        debugShowCheckedModeBanner: false,
-        theme: theme,
-        home: Container(
-          color: Theme.of(context).colorScheme.surface,
-          child: Center(child: CircularProgressIndicator(color: kBlackColor)),
-        ),
-      );
-    }
-    return MaterialApp.router(
-      localizationsDelegates: const [GlobalWidgetsLocalizations.delegate],
+    final user = ref.watch(userProvider);
+    return MaterialApp(
       title: 'ChatterBox',
       debugShowCheckedModeBanner: false,
-      routerDelegate: RoutemasterDelegate(
-        routesBuilder: (context) {
-          final user = ref.watch(userProvider);
-          if (user != null && user.token.isNotEmpty) {
-            return loggedInRoute;
-          } else {
-            return loggedOutRoute;
-          }
-        },
-      ),
-      routeInformationParser: const RoutemasterParser(),
       theme: theme,
+      home: isLoading
+          ? Scaffold(
+              body: Center(
+                child: CircularProgressIndicator(color: kBlackColor),
+              ),
+            )
+          : user != null && user.token.isNotEmpty
+          ? const HomeScreen()
+          : const LoginScreen(),
     );
   }
 }

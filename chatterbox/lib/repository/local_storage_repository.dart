@@ -2,24 +2,18 @@ import 'package:material_ui/material_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LocalStorageRepository {
-  void setToken(String token) async {
-    SharedPreferences preferences = await SharedPreferences.getInstance();
-    try {
-      preferences.setString('x-auth-token', token);
-    } catch (e) {
-      debugPrint('Error setting token: $e');
-    }
+  final SharedPreferencesAsync _preferences = SharedPreferencesAsync();
+
+  Future<void> setToken(String token) async {
+    await _preferences.setString('x-auth-token', token);
   }
 
   Future<String?> getToken() async {
-    SharedPreferences preferences = await SharedPreferences.getInstance();
-    String? token = preferences.getString('x-auth-token');
     try {
-      if (token == null) debugPrint('No token found');
-      debugPrint('Token retrieved: $token');
+      return await _preferences.getString('x-auth-token');
     } catch (e) {
-      debugPrint('Error retrieving token: $e');
+      debugPrint('Error reading auth token: $e');
+      return null;
     }
-    return token;
   }
 }

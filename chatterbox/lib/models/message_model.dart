@@ -1,4 +1,3 @@
-// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
 
 class MessageModel {
@@ -36,18 +35,5 @@ class MessageModel {
   @override
   String toString() {
     return 'MessageModel(senderId: $senderId, receiverId: $receiverId, message: $message)';
-  }
-
-  MessageModel copyWith({
-    String? messageId,
-    String? message,
-    String? senderId,
-    String? receiverId,
-  }) {
-    return MessageModel(
-      message: message ?? this.message,
-      senderId: senderId ?? this.senderId,
-      receiverId: receiverId ?? this.receiverId,
-    );
   }
 }
