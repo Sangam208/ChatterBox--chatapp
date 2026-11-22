@@ -29,7 +29,8 @@ String userFacingException(Object error, {required String fallback}) {
       details.contains('connection timed out') ||
       details.contains('failed host lookup') ||
       details.contains('network is unreachable')) {
-    return 'Could not connect. Check your internet and try again.';
+    return 'Could not reach ChatterBox. Make sure the server is running '
+        'and your phone is on the same Wi-Fi.';
   }
 
   if (error is FormatException) {
