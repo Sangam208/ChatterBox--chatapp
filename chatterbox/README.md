@@ -1,16 +1,19 @@
-# chatterbox
+# ChatterBox
 
-A new Flutter project.
+ChatterBox is a simple real-time chat app for finding people and having one-to-one conversations. It uses Google Sign-In for authentication and Socket.IO to deliver messages live.
 
-## Getting Started
+## Tech stack
 
-This project is a starting point for a Flutter application.
+- Flutter and Dart (Android client)
+- Node.js and Express (API)
+- MongoDB (user data)
+- Socket.IO (real-time messaging)
+- Riverpod (client state management)
 
-A few resources to get you started if this is your first Flutter project:
+## Android APK
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+[Download the Android APK](downloads/ChatterBox-android.apk)
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Configuration
+
+Create a root `.env` for the Flutter app and a `server/.env` for the API. Set the API host, Google OAuth client IDs, MongoDB connection string, server port, and JWT secret in the appropriate file. These files contain local configuration and are excluded from Git.
